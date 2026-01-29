@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.GameData.Objects;
 
 namespace KivoValley;
 
@@ -13,11 +14,17 @@ namespace KivoValley;
 [SuppressMessage("ReSharper", "UnusedType.Global")]
 public class ModEntry : Mod
 {
+    public static Texture2D SpriteSheet;
+    
     public override void Entry(IModHelper helper)
     {
         // 初始化传送系统
-        Teleport.Helper = Helper;
-        Teleport.TeleportTexture = helper.ModContent.Load<Texture2D>("assets/teleped.png");
+        Teleport.ModUniqueId = ModManifest.UniqueID;
+        // 贴图通过Content Patcher加载，不再直接加载
+        SpriteSheet = Helper.ModContent.Load<Texture2D>("assets/objects.png");
+
+        // 添加自定义物品数据
+        helper.Events.Content.AssetRequested += OnAssetRequested;
 
         // Harmony补丁注入
         var harmony = new Harmony(ModManifest.UniqueID);
@@ -27,6 +34,45 @@ public class ModEntry : Mod
         helper.Events.Input.ButtonPressed += OnButtonPressed;
 
         Monitor.Log("KivoValley模组已加载！", LogLevel.Info);
+    }
+
+    /// <summary>
+    /// 注册自定义资产（物品数据）
+    /// </summary>
+    private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
+    {
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
+        {
+            e.Edit(asset =>
+            {
+                var data = asset.AsDictionary<string, ObjectData>().Data;
+
+                // 添加传送物品数据
+                foreach (var location in Teleport.Locations)
+                {
+                    var itemId = $"{ModManifest.UniqueID}_{location.MapName}";
+
+                    // 获取i18n翻译（使用实际文本，不是键）
+                    var displayName = Helper.Translation.Get("item.kivo-shrine.name");
+                    var description = Helper.Translation.Get("item.kivo-shrine.description");
+
+                    // Data/Objects数据格式：Name/DisplayName/Description/Type/Category/Price/Texture/SpriteIndex
+                    // Texture字段：使用Content Patcher加载的资产名称，不带路径
+                    var itemData = new ObjectData
+                    {
+                        Name = itemId,
+                        DisplayName = displayName,
+                        Description = description,
+                        Type = "Basic",
+                        Category = StardewValley.Object.toolCategory,
+                        Price = 2000,
+                        Texture = Helper.ModContent.GetInternalAssetName( "assets/objects.png" ).Name,
+                        SpriteIndex = 0
+                    };
+                    data[itemId] = itemData;
+                }
+            });
+        }
     }
 
     /// <summary>
@@ -56,20 +102,12 @@ public class ModEntry : Mod
 
         // 检查是否持有任意传送物品
         var targetLocation = Teleport.Locations
-            .FirstOrDefault(loc => heldItem.itemId.Value?.Equals(loc.MapName) ?? false);
+            .FirstOrDefault(loc => heldItem.QualifiedItemId?.Contains(loc.MapName) ?? false);
 
         if (targetLocation == null) return;
 
         try
         {
-            // 检查目标地图是否存在
-            var mapLocation = Game1.getLocationFromName(targetLocation.MapName);
-            if (mapLocation == null)
-            {
-                Game1.addHUDMessage(new HUDMessage($"目标地图 '{targetLocation.MapName}' 不存在！", 3));
-                return;
-            }
-
             // 检查玩家是否在可以传送的状态
             if (Game1.player.isRidingHorse())
             {
@@ -77,12 +115,15 @@ public class ModEntry : Mod
                 return;
             }
 
-            // 执行传送
-            Game1.warpFarmer(targetLocation.MapName, targetLocation.X, targetLocation.Y, false);
-            Game1.addHUDMessage(new HUDMessage($"已传送到 {targetLocation.MapName}！", 2));
-
-            // 播放传送音效
-            Game1.playSound("wand");
+            // 处理传送：当前位置与目标位置互跳
+            if (Teleport.HandleTeleport(Game1.player, targetLocation, out var error))
+            {
+                Game1.playSound("wand");
+            }
+            else
+            {
+                Game1.addHUDMessage(new HUDMessage($"传送失败: {error}", 3));
+            }
         }
         catch (Exception ex)
         {
