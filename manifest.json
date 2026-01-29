@@ -1,0 +1,12 @@
+{
+  "Name": "KivoValley",
+  "Author": "Arborsm",
+  "Version": "1.0.0",
+  "Description": "A mod for Kivotos Valley",
+  "UniqueID": "Arborsm.KivoValley",
+  "EntryDll": "KivoValley.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [],
+  "Dependencies": [
+  ]
+}
