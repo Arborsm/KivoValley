@@ -14,14 +14,10 @@ namespace KivoValley;
 [SuppressMessage("ReSharper", "UnusedType.Global")]
 public class ModEntry : Mod
 {
-    public static Texture2D SpriteSheet;
-    
     public override void Entry(IModHelper helper)
     {
-        // 初始化传送系统
-        Teleport.ModUniqueId = ModManifest.UniqueID;
-        // 贴图通过Content Patcher加载，不再直接加载
-        SpriteSheet = Helper.ModContent.Load<Texture2D>("assets/objects.png");
+        I18n.Init(helper.Translation);
+        Helper.ModContent.Load<Texture2D>("assets/objects.png");
 
         // 添加自定义物品数据
         helper.Events.Content.AssetRequested += OnAssetRequested;
@@ -46,31 +42,28 @@ public class ModEntry : Mod
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, ObjectData>().Data;
-
-                // 添加传送物品数据
-                foreach (var location in Teleport.Locations)
+                
+                var itemData = new ObjectData
                 {
-                    var itemId = $"{ModManifest.UniqueID}_{location.MapName}";
-
-                    // 获取i18n翻译（使用实际文本，不是键）
-                    var displayName = Helper.Translation.Get("item.kivo-shrine.name");
-                    var description = Helper.Translation.Get("item.kivo-shrine.description");
-
-                    // Data/Objects数据格式：Name/DisplayName/Description/Type/Category/Price/Texture/SpriteIndex
-                    // Texture字段：使用Content Patcher加载的资产名称，不带路径
-                    var itemData = new ObjectData
-                    {
-                        Name = itemId,
-                        DisplayName = displayName,
-                        Description = description,
-                        Type = "Basic",
-                        Category = StardewValley.Object.toolCategory,
-                        Price = 2000,
-                        Texture = Helper.ModContent.GetInternalAssetName( "assets/objects.png" ).Name,
-                        SpriteIndex = 0
-                    };
-                    data[itemId] = itemData;
-                }
+                    Name = Teleport.ItemId,
+                    DisplayName = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Name]",
+                    Description = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Description]", 
+                    Type = "Basic",
+                    Category = StardewValley.Object.toolCategory,
+                    Texture = Helper.ModContent.GetInternalAssetName( "assets/objects.png" ).Name,
+                    SpriteIndex = 0,
+                    CanBeTrashed = false,
+                    CanBeGivenAsGift = false,
+                };
+                data[Teleport.ItemId] = itemData;
+            });
+        }           
+        else if (e.NameWithoutLocale.IsEquivalentTo("Strings/Objects"))
+        {
+            e.Edit(asset => {
+                var dict = asset.AsDictionary<string, string>();
+                dict.Data[$"{Teleport.ItemId}_Name"] = I18n.Item_KivoShrine_Name();
+                dict.Data[$"{Teleport.ItemId}_Description"] = I18n.Item_KivoShrine_Description();
             });
         }
     }
@@ -99,13 +92,9 @@ public class ModEntry : Mod
     {
         var heldItem = Game1.player.ActiveItem;
         if (heldItem == null) return;
-
-        // 检查是否持有任意传送物品
-        var targetLocation = Teleport.Locations
-            .FirstOrDefault(loc => heldItem.QualifiedItemId?.Contains(loc.MapName) ?? false);
-
-        if (targetLocation == null) return;
-
+        
+        if (!heldItem.ItemId?.Equals(Teleport.ItemId) ?? false) return;
+        
         try
         {
             // 检查玩家是否在可以传送的状态
@@ -114,9 +103,14 @@ public class ModEntry : Mod
                 Game1.addHUDMessage(new HUDMessage("骑马时无法使用传送卷轴！", 3));
                 return;
             }
+            
+            if (Game1.uiMode || Game1.activeClickableMenu != null)
+            {
+                return;
+            }
 
             // 处理传送：当前位置与目标位置互跳
-            if (Teleport.HandleTeleport(Game1.player, targetLocation, out var error))
+            if (Teleport.HandleTeleport(Game1.player, Teleport.Location, out var error))
             {
                 Game1.playSound("wand");
             }

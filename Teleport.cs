@@ -10,10 +10,7 @@ namespace KivoValley;
 /// </summary>
 public static class Teleport
 {
-    /// <summary>
-    /// Mod唯一ID
-    /// </summary>
-    public static string? ModUniqueId;
+    public const string ItemId = "KivoShrine";
 
     /// <summary>
     /// 保存的返回传送位置（每个玩家一个）
@@ -24,9 +21,7 @@ public static class Teleport
     /// <summary>
     /// 所有可用的传送地点
     /// </summary>
-    public static readonly TeleportLocation[] Locations = {
-        new("Custom_KivoVallay_CasketShittin", 20, 20),
-    };
+    public static readonly TeleportLocation Location = new("Custom_KivoVallay_CasketShittin", 20, 20);
 
     /// <summary>
     /// 保存的位置信息
@@ -57,11 +52,8 @@ public static class Teleport
     /// </summary>
     public static void GiveAllScrollsToPlayer(Farmer player)
     {
-        foreach (var location in Locations)
-        {
-            var scroll = CreateTeleportScroll(location);
-            player.addItemToInventory(scroll);
-        }
+        var scroll = CreateTeleportScroll(Location);
+        player.addItemToInventory(scroll);
     }
 
     /// <summary>
@@ -69,16 +61,14 @@ public static class Teleport
     /// </summary>
     private static Object CreateTeleportScroll(TeleportLocation location)
     {
-        var itemId = $"{ModUniqueId}_{location.MapName}";
-
         // 使用ItemRegistry创建物品
-        var scroll = ItemRegistry.Create<Object>(itemId);
+        var scroll = ItemRegistry.Create<Object>(ItemId);
         if (scroll != null)
         {
             scroll.Stack = 1;
         }
 
-        return scroll ?? new Object(itemId, 1);
+        return scroll ?? new Object(ItemId, 1);
     }
 
     /// <summary>
