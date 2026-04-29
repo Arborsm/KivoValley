@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.GameData.Objects;
 
 namespace KivoValley;
 
@@ -17,22 +16,21 @@ public class ModEntry : Mod
 {
     private static readonly int? FallbackGlyphYOffsetOverride = null;
 
-    private static readonly string[] FontAssetsToMerge = new[]
-    {
+    private static readonly string[] FontAssetsToMerge = {
         "Fonts/SpriteFont1",
         "Fonts/SmallFont"
     };
 
-    private ContentManager? rawGameContent;
-    private ModConfig config = new();
+    private ContentManager? _rawGameContent;
+    private ModConfig _config = new();
 
     public override void Entry(IModHelper helper)
     {
         I18n.Init(helper.Translation);
-        config = helper.ReadConfig<ModConfig>();
-        helper.WriteConfig(config);
+        _config = helper.ReadConfig<ModConfig>();
+        helper.WriteConfig(_config);
 
-        Helper.ModContent.Load<Texture2D>("assets/objects.png");
+        //Helper.ModContent.Load<Texture2D>("assets/objects.png");
 
         // 注册内容替换
         helper.Events.Content.AssetRequested += OnAssetRequested;
@@ -42,9 +40,9 @@ public class ModEntry : Mod
         harmony.PatchAll();
 
         // 注册事件监听
-        helper.Events.Input.ButtonPressed += OnButtonPressed;
+        //helper.Events.Input.ButtonPressed += OnButtonPressed;
 
-        Monitor.Log("KivoValley模组已加载！", LogLevel.Info);
+        //Monitor.Log("KivoValley模组已加载！", LogLevel.Info);
     }
 
     /// <summary>
@@ -56,36 +54,6 @@ public class ModEntry : Mod
         if (fontAssetName != null)
         {
             EditChineseSpriteFont(e, fontAssetName);
-        }
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
-        {
-            e.Edit(asset =>
-            {
-                var data = asset.AsDictionary<string, ObjectData>().Data;
-
-                var itemData = new ObjectData
-                {
-                    Name = Teleport.ItemId,
-                    DisplayName = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Name]",
-                    Description = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Description]",
-                    Type = "Basic",
-                    Category = StardewValley.Object.toolCategory,
-                    Texture = Helper.ModContent.GetInternalAssetName("assets/objects.png").Name,
-                    SpriteIndex = 0,
-                    CanBeTrashed = false,
-                    CanBeGivenAsGift = false,
-                };
-                data[Teleport.ItemId] = itemData;
-            });
-        }
-        else if (e.NameWithoutLocale.IsEquivalentTo("Strings/Objects"))
-        {
-            e.Edit(asset =>
-            {
-                var dict = asset.AsDictionary<string, string>();
-                dict.Data[$"{Teleport.ItemId}_Name"] = I18n.Item_KivoShrine_Name();
-                dict.Data[$"{Teleport.ItemId}_Description"] = I18n.Item_KivoShrine_Description();
-            });
         }
     }
 
@@ -110,9 +78,10 @@ public class ModEntry : Mod
                     Game1.graphics.GraphicsDevice,
                     zhFont,
                     jaFont,
-                    config.ExtraFontCharacters,
+                    _config.ExtraFontCharacters,
                     FallbackGlyphYOffsetOverride,
-                    config.DisableFallbackGlyphScale ? 1f : config.FallbackGlyphScaleOverride
+                    _config.DisableFallbackGlyphScale ? 1f : _config.FallbackGlyphScaleOverride,
+                    _config.SmoothScaledFallbackGlyphs
                 );
 
                 if (mergeResult.AddedCharacters.Length > 0)
@@ -125,15 +94,14 @@ public class ModEntry : Mod
                     var missingAfterMerge = new string(mergeResult.AddedCharacters.Where(ch => !mergedGlyphs.ContainsKey(ch)).ToArray());
 
                     Monitor.Log(
-                        $"已为中文 {assetName} 合并日文字形: {FormatFontCharactersWithCodes(mergeResult.AddedCharacters)}；自检存在: {FormatFontCharactersWithCodes(confirmedCharacters)}；自检缺失: {FormatFontCharactersWithCodes(missingAfterMerge)}；fallbackScale={mergeResult.FallbackGlyphScale:0.###}；disableScale={config.DisableFallbackGlyphScale}；fallbackYOffset={mergeResult.FallbackGlyphYOffset}；格式: zh={zhFont.Texture.Format}, ja={jaFont.Texture.Format}, merged={mergeResult.Font.Texture.Format}；atlas: {mergeResult.Font.Texture.Width}x{mergeResult.Font.Texture.Height}",
+                        $"已为中文 {assetName} 合并日文字形: {FormatFontCharactersWithCodes(mergeResult.AddedCharacters)}；自检存在: {FormatFontCharactersWithCodes(confirmedCharacters)}；自检缺失: {FormatFontCharactersWithCodes(missingAfterMerge)}；fallbackScale={mergeResult.FallbackGlyphScale:0.###}；disableScale={_config.DisableFallbackGlyphScale}；smoothScale={_config.SmoothScaledFallbackGlyphs}；fallbackYOffset={mergeResult.FallbackGlyphYOffset}；格式: zh={zhFont.Texture.Format}, ja={jaFont.Texture.Format}, merged={mergeResult.Font.Texture.Format}；atlas: {mergeResult.Font.Texture.Width}x{mergeResult.Font.Texture.Height}",
                         LogLevel.Info
                     );
                 }
                 else
                 {
                     Monitor.Log(
-                        $"中文 {assetName} 未合并新字形。已存在: {FormatFontCharacters(mergeResult.AlreadyPresentCharacters)}；日文字体缺失: {FormatFontCharacters(mergeResult.UnavailableCharacters)}；配置: {config.ExtraFontCharacters}",
-                        LogLevel.Trace
+                        $"中文 {assetName} 未合并新字形。已存在: {FormatFontCharacters(mergeResult.AlreadyPresentCharacters)}；日文字体缺失: {FormatFontCharacters(mergeResult.UnavailableCharacters)}；配置: {_config.ExtraFontCharacters}"
                     );
                 }
             }
@@ -158,12 +126,12 @@ public class ModEntry : Mod
 
     private SpriteFont LoadRawGameFont(string assetName)
     {
-        rawGameContent ??= new ContentManager(
+        _rawGameContent ??= new ContentManager(
             Game1.content.ServiceProvider,
             Path.Combine(Constants.GamePath, "Content")
         );
 
-        return rawGameContent.Load<SpriteFont>(assetName);
+        return _rawGameContent.Load<SpriteFont>(assetName);
     }
 
     private static string FormatFontCharacters(string characters)
@@ -179,62 +147,5 @@ public class ModEntry : Mod
         }
 
         return string.Join(", ", characters.Select(ch => $"{ch}(U+{(int)ch:X4})"));
-    }
-
-    /// <summary>
-    /// 处理按键事件
-    /// </summary>
-    private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
-    {
-        if (Game1.player == null) return;
-
-        if (e.Button == SButton.MouseRight)
-        {
-            HandleRightClick();
-        }
-        else if (e.Button == SButton.F9)
-        {
-            Teleport.GiveAllScrollsToPlayer(Game1.player);
-        }
-    }
-
-    /// <summary>
-    /// 处理右键点击传送
-    /// </summary>
-    private void HandleRightClick()
-    {
-        var heldItem = Game1.player.ActiveItem;
-        if (heldItem == null) return;
-
-        if (!heldItem.ItemId?.Equals(Teleport.ItemId) ?? false) return;
-
-        try
-        {
-            // 检查玩家是否在可以传送的状态
-            if (Game1.player.isRidingHorse())
-            {
-                Game1.addHUDMessage(new HUDMessage("骑马时无法使用传送卷轴！", 3));
-                return;
-            }
-
-            if (Game1.uiMode || Game1.activeClickableMenu != null)
-            {
-                return;
-            }
-
-            // 处理传送：当前位置与目标位置互跳
-            if (Teleport.HandleTeleport(Game1.player, Teleport.Location, out var error))
-            {
-                Game1.playSound("wand");
-            }
-            else
-            {
-                Game1.addHUDMessage(new HUDMessage($"传送失败: {error}", 3));
-            }
-        }
-        catch (Exception ex)
-        {
-            Game1.addHUDMessage(new HUDMessage($"传送失败: {ex.Message}", 3));
-        }
     }
 }

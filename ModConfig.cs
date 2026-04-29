@@ -13,6 +13,11 @@ internal sealed class ModConfig
     public bool DisableFallbackGlyphScale { get; set; } = false;
 
     /// <summary>
+    /// 缩放日文字形时是否使用线性采样。true 更平滑，false 更像像素字体。
+    /// </summary>
+    public bool SmoothScaledFallbackGlyphs { get; set; } = true;
+
+    /// <summary>
     /// 日文字形缩放覆盖值。0 表示自动测量；正数表示手动覆盖，例如 0.85、0.9、0.95。
     /// </summary>
     public float FallbackGlyphScaleOverride { get; set; } = 0f;

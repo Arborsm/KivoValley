@@ -15,7 +15,8 @@ internal static class SpriteFontMerger
         SpriteFont fallback,
         string charsToAdd,
         int? fallbackYOffsetOverride = null,
-        float fallbackGlyphScale = 0f
+        float fallbackGlyphScale = 0f,
+        bool smoothScaledFallbackGlyphs = true
     )
     {
         if (string.IsNullOrEmpty(charsToAdd))
@@ -79,7 +80,14 @@ internal static class SpriteFontMerger
             );
         }
 
-        var mergedTexture = BuildMergedTexture(graphicsDevice, primary.Texture, fallback.Texture, placements, glyphScale);
+        var mergedTexture = BuildMergedTexture(
+            graphicsDevice,
+            primary.Texture,
+            fallback.Texture,
+            placements,
+            glyphScale,
+            smoothScaledFallbackGlyphs
+        );
         return new SpriteFontMergeResult(
             BuildMergedFont(primary, mergedTexture, primaryGlyphs, placements, glyphYOffset, glyphScale),
             new string(placements.Select(placement => placement.Character).ToArray()),
@@ -365,7 +373,8 @@ internal static class SpriteFontMerger
         Texture2D primaryTexture,
         Texture2D fallbackTexture,
         List<(char Character, SpriteFont.Glyph SourceGlyph, Rectangle TargetBounds)> placements,
-        float fallbackGlyphScale
+        float fallbackGlyphScale,
+        bool smoothScaledFallbackGlyphs
     )
     {
         var width = Math.Max(primaryTexture.Width, placements.Max(placement => placement.TargetBounds.Right));
@@ -438,7 +447,15 @@ internal static class SpriteFontMerger
             return texture;
         }
 
-        return BuildMergedTextureWithGpu(graphicsDevice, primaryTexture, fallbackTexture, placements, width, height);
+        return BuildMergedTextureWithGpu(
+            graphicsDevice,
+            primaryTexture,
+            fallbackTexture,
+            placements,
+            width,
+            height,
+            smoothScaledFallbackGlyphs && !canCopyWithoutScaling
+        );
     }
 
     private static Texture2D BuildMergedTextureWithGpu(
@@ -447,7 +464,8 @@ internal static class SpriteFontMerger
         Texture2D fallbackTexture,
         List<(char Character, SpriteFont.Glyph SourceGlyph, Rectangle TargetBounds)> placements,
         int width,
-        int height
+        int height,
+        bool smoothFallbackGlyphs
     )
     {
         var previousRenderTargets = graphicsDevice.GetRenderTargets();
@@ -474,7 +492,13 @@ internal static class SpriteFontMerger
                 new Rectangle(0, 0, primaryTexture.Width, primaryTexture.Height),
                 Color.White
             );
+            spriteBatch.End();
 
+            spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Opaque,
+                smoothFallbackGlyphs ? SamplerState.LinearClamp : SamplerState.PointClamp
+            );
             foreach (var placement in placements)
             {
                 spriteBatch.Draw(
