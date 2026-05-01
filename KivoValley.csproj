@@ -17,4 +17,9 @@
         <PackageReference Include="Pathoschild.Stardew.ModTranslationClassBuilder" Version="2.2.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="KivoValley\i18n\default.json" />
+      <AdditionalFiles Include="KivoValley\i18n\zh.json" />
+    </ItemGroup>
+
 </Project>
