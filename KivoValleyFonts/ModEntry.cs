@@ -1,12 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using HarmonyLib;
+using KivoValley;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 
-namespace KivoValley;
+namespace KivoValleyFonts;
 
 /// <summary>
 /// KivoValley模组入口类
@@ -141,11 +142,6 @@ public class ModEntry : Mod
 
     private static string FormatFontCharactersWithCodes(string characters)
     {
-        if (string.IsNullOrEmpty(characters))
-        {
-            return "(无)";
-        }
-
-        return string.Join(", ", characters.Select(ch => $"{ch}(U+{(int)ch:X4})"));
+        return string.IsNullOrEmpty(characters) ? "(无)" : string.Join(", ", characters.Select(ch => $"{ch}(U+{(int)ch:X4})"));
     }
 }

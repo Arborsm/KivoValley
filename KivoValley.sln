@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KivoValley", "KivoValley.csproj", "{CDDFE3F5-9A85-4086-8818-B300A4E9358F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KivoValleyFonts", "KivoValleyFonts\KivoValleyFonts.csproj", "{51CBE1CD-71D5-44A2-854C-3A768F739112}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KivoValley", "KivoValley\KivoValley.csproj", "{1BC020D7-46AE-485C-BC49-D6CF0DA0BF1C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +10,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CDDFE3F5-9A85-4086-8818-B300A4E9358F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CDDFE3F5-9A85-4086-8818-B300A4E9358F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CDDFE3F5-9A85-4086-8818-B300A4E9358F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CDDFE3F5-9A85-4086-8818-B300A4E9358F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51CBE1CD-71D5-44A2-854C-3A768F739112}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51CBE1CD-71D5-44A2-854C-3A768F739112}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51CBE1CD-71D5-44A2-854C-3A768F739112}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51CBE1CD-71D5-44A2-854C-3A768F739112}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BC020D7-46AE-485C-BC49-D6CF0DA0BF1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BC020D7-46AE-485C-BC49-D6CF0DA0BF1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BC020D7-46AE-485C-BC49-D6CF0DA0BF1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BC020D7-46AE-485C-BC49-D6CF0DA0BF1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
