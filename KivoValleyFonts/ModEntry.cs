@@ -27,7 +27,7 @@ public class ModEntry : Mod
 
     public override void Entry(IModHelper helper)
     {
-        I18n.Init(helper.Translation);
+        //I18n.Init(helper.Translation);
         _config = helper.ReadConfig<ModConfig>();
         helper.WriteConfig(_config);
 

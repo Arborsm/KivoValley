@@ -1,10 +1,10 @@
 {
-  "Name": "KivoValley",
+  "Name": "KivoValleyFonts",
   "Author": "Arborsm",
   "Version": "1.0.0",
-  "Description": "A mod for Kivotos Valley",
-  "UniqueID": "Arborsm.KivoValley",
-  "EntryDll": "KivoValley.dll",
+  "Description": "Add Japanese characters to Chinese fonts",
+  "UniqueID": "Arborsm.KivoValleyFonts",
+  "EntryDll": "KivoValleyFonts.dll",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [],
   "Dependencies": [
