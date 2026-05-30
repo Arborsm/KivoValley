@@ -1,4 +1,4 @@
-namespace KivoValley;
+namespace KivoValleyFonts;
 
 internal sealed class ModConfig
 {

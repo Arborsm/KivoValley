@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace KivoValley;
+namespace KivoValleyFonts;
 
 internal static class SpriteFontMerger
 {

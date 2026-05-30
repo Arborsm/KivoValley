@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using HarmonyLib;
-using KivoValley;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;

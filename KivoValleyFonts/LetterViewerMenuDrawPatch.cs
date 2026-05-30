@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using StardewValley;
 using StardewValley.Menus;
 
-namespace KivoValley;
+namespace KivoValleyFonts;
 
 [HarmonyPatch(typeof(LetterViewerMenu))]
 [HarmonyPatch("draw")]
@@ -14,86 +15,64 @@ namespace KivoValley;
 [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 public class LetterViewerMenuDrawPatch
 {
-    public static Texture2D? BorderTexture; 
+    private const float OriginalDrawScale = 4f;
+    private const float LetterBackgroundScaleMultiplier = 1.12f;
+    private const float LetterBackgroundOffsetX = -4f;
+    private const float LetterBackgroundOffsetY = -4f;
+    private const float FloatTolerance = 0.001f;
 
-    static void Postfix(LetterViewerMenu __instance, SpriteBatch b)
-    {
-        var backgroundWidth = 320 * 4f * __instance.scale;
-        var backgroundHeight = 180 * 4f * __instance.scale;
-        var backgroundPosition = new Vector2(
-            __instance.xPositionOnScreen + __instance.width / 2f,
-            __instance.yPositionOnScreen + __instance.height / 2f
-        );
-        
-        DrawBorderAroundBackground(b, backgroundPosition, backgroundWidth, backgroundHeight, __instance);
-    }
-
-    private static void DrawBorderAroundBackground(SpriteBatch b, Vector2 center, float width, float height,
-        LetterViewerMenu letter)
-    {
-        if (BorderTexture == null)
+    private static readonly MethodInfo SpriteBatchDrawMethod = AccessTools.Method(
+        typeof(SpriteBatch),
+        nameof(SpriteBatch.Draw),
+        new[]
         {
-            DrawSimpleBorder(b, center, width, height, letter);
-            return;
+            typeof(Texture2D),
+            typeof(Vector2),
+            typeof(Rectangle?),
+            typeof(Color),
+            typeof(float),
+            typeof(Vector2),
+            typeof(float),
+            typeof(SpriteEffects),
+            typeof(float)
         }
-        
-        var borderSize = 12f * letter.scale;
-        
-        var borderRect = new Rectangle(
-            (int)(center.X - (width / 2 + borderSize)),
-            (int)(center.Y - (height / 2 + borderSize)),
-            (int)(width + borderSize * 2),
-            (int)(height + borderSize * 2)
-        );
-        
-        b.Draw(
-            BorderTexture,
-            borderRect,
-            Color.White * 0.8f
-        );
+    );
+
+    private static readonly MethodInfo AdjustLetterBackgroundPositionMethod = AccessTools.Method(
+        typeof(LetterViewerMenuDrawPatch),
+        nameof(AdjustLetterBackgroundPosition)
+    );
+
+    private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+    {
+        var codes = instructions.ToList();
+        var backgroundDrawIndex = codes.FindIndex(instruction => instruction.Calls(SpriteBatchDrawMethod));
+
+        if (backgroundDrawIndex < 0)
+        {
+            return codes;
+        }
+
+        for (var i = backgroundDrawIndex - 1; i >= 0; i--)
+        {
+            if (codes[i].opcode == OpCodes.Ldc_R4 && codes[i].operand is float value && MathF.Abs(value - OriginalDrawScale) < FloatTolerance)
+            {
+                codes[i].operand = OriginalDrawScale * LetterBackgroundScaleMultiplier;
+                continue;
+            }
+
+            if (codes[i].opcode == OpCodes.Newobj && codes[i].operand is ConstructorInfo constructor && constructor.DeclaringType == typeof(Vector2))
+            {
+                codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, AdjustLetterBackgroundPositionMethod));
+                break;
+            }
+        }
+
+        return codes;
     }
 
-    private static void DrawSimpleBorder(SpriteBatch b, Vector2 center, float width, float height, LetterViewerMenu letter)
+    private static Vector2 AdjustLetterBackgroundPosition(Vector2 position)
     {
-        var borderThickness = 8f * letter.scale;
-        var borderColor = Color.Goldenrod * 0.9f;
-        
-        var borderRect = new Rectangle(
-            (int)(center.X - width / 2 - borderThickness),
-            (int)(center.Y - height / 2 - borderThickness),
-            (int)(width + borderThickness * 2),
-            (int)(height + borderThickness * 2)
-        );
-        
-        var pixel = Game1.staminaRect;
-        
-        b.Draw(pixel, new Rectangle(borderRect.X, borderRect.Y, borderRect.Width, (int)borderThickness), borderColor);
-        b.Draw(pixel,
-            new Rectangle(borderRect.X, borderRect.Y + borderRect.Height - (int)borderThickness, borderRect.Width,
-                (int)borderThickness), borderColor);
-        b.Draw(pixel, new Rectangle(borderRect.X, borderRect.Y, (int)borderThickness, borderRect.Height), borderColor);
-        b.Draw(pixel,
-            new Rectangle(borderRect.X + borderRect.Width - (int)borderThickness, borderRect.Y, (int)borderThickness,
-                borderRect.Height), borderColor);
-        
-        DrawBorderCorners(b, borderRect, borderColor, letter);
-    }
-
-    static void DrawBorderCorners(SpriteBatch b, Rectangle borderRect, Color color, LetterViewerMenu letter)
-    {
-        var cornerSize = 16f * letter.scale;
-        var pixel = Game1.staminaRect;
-        b.Draw(pixel, new Rectangle(borderRect.X, borderRect.Y, (int)cornerSize, 4), color);
-        b.Draw(pixel, new Rectangle(borderRect.X, borderRect.Y, 4, (int)cornerSize), color);
-        b.Draw(pixel, new Rectangle(borderRect.X + borderRect.Width - (int)cornerSize, borderRect.Y, (int)cornerSize, 4), color);
-        b.Draw(pixel, new Rectangle(borderRect.X + borderRect.Width - 4, borderRect.Y, 4, (int)cornerSize), color);
-        b.Draw(pixel, new Rectangle(borderRect.X, borderRect.Y + borderRect.Height - 4, (int)cornerSize, 4), color);
-        b.Draw(pixel, new Rectangle(borderRect.X, borderRect.Y + borderRect.Height - (int)cornerSize, 4, (int)cornerSize), color);
-        b.Draw(pixel,
-            new Rectangle(borderRect.X + borderRect.Width - (int)cornerSize, borderRect.Y + borderRect.Height - 4,
-                (int)cornerSize, 4), color);
-        b.Draw(pixel,
-            new Rectangle(borderRect.X + borderRect.Width - 4, borderRect.Y + borderRect.Height - (int)cornerSize, 4,
-                (int)cornerSize), color);
+        return new Vector2(position.X + LetterBackgroundOffsetX, position.Y + LetterBackgroundOffsetY);
     }
 }
