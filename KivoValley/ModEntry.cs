@@ -48,12 +48,15 @@ public class ModEntry : Mod
                     Name = Teleport.ItemId,
                     DisplayName = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Name]",
                     Description = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Description]", 
-                    Type = "Basic",
+                    Type = "Quest",
                     Category = StardewValley.Object.toolCategory,
+                    Price = 0,
                     Texture = Helper.ModContent.GetInternalAssetName( "assets/objects.png" ).Name,
                     SpriteIndex = 0,
                     CanBeTrashed = false,
                     CanBeGivenAsGift = false,
+                    ExcludeFromShippingCollection = true,
+                    ExcludeFromRandomSale = true,
                 };
                 data[Teleport.ItemId] = itemData;
             });
@@ -78,10 +81,6 @@ public class ModEntry : Mod
         if (e.Button == SButton.MouseRight)
         {
             HandleRightClick();
-        }
-        else if (e.Button == SButton.F9)
-        {
-            Teleport.GiveAllScrollsToPlayer(Game1.player);
         }
     }
 
