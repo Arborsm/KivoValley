@@ -29,7 +29,7 @@ public class ModEntry : Mod
         // 注册事件监听
         helper.Events.Input.ButtonPressed += OnButtonPressed;
 
-        Monitor.Log("KivoValley模组已加载！", LogLevel.Info);
+        Monitor.Log(I18n.Mod_Loaded(), LogLevel.Info);
     }
 
     /// <summary>
@@ -42,12 +42,12 @@ public class ModEntry : Mod
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, ObjectData>().Data;
-                
+
                 var itemData = new ObjectData
                 {
                     Name = Teleport.ItemId,
                     DisplayName = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Name]",
-                    Description = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Description]", 
+                    Description = @$"[LocalizedText Strings\\Objects:{Teleport.ItemId}_Description]",
                     Type = "Quest",
                     Category = StardewValley.Object.toolCategory,
                     Price = 0,
@@ -60,7 +60,7 @@ public class ModEntry : Mod
                 };
                 data[Teleport.ItemId] = itemData;
             });
-        }           
+        }
         else if (e.NameWithoutLocale.IsEquivalentTo("Strings/Objects"))
         {
             e.Edit(asset => {
@@ -91,18 +91,24 @@ public class ModEntry : Mod
     {
         var heldItem = Game1.player.ActiveItem;
         if (heldItem == null) return;
-        
+
         if (!heldItem.ItemId?.Equals(Teleport.ItemId) ?? false) return;
-        
+
         try
         {
+            if (Game1.isFestival())
+            {
+                Game1.addHUDMessage(new HUDMessage(I18n.Teleport_FestivalBlocked(), 3));
+                return;
+            }
+
             // 检查玩家是否在可以传送的状态
             if (Game1.player.isRidingHorse())
             {
-                Game1.addHUDMessage(new HUDMessage("骑马时无法使用传送卷轴！", 3));
+                Game1.addHUDMessage(new HUDMessage(I18n.Teleport_HorseBlocked(), 3));
                 return;
             }
-            
+
             if (Game1.uiMode || Game1.activeClickableMenu != null)
             {
                 return;
@@ -115,12 +121,12 @@ public class ModEntry : Mod
             }
             else
             {
-                Game1.addHUDMessage(new HUDMessage($"传送失败: {error}", 3));
+                Game1.addHUDMessage(new HUDMessage(I18n.Teleport_Fail(error), 3));
             }
         }
         catch (Exception ex)
         {
-            Game1.addHUDMessage(new HUDMessage($"传送失败: {ex.Message}", 3));
+            Game1.addHUDMessage(new HUDMessage(I18n.Teleport_Fail(ex.Message), 3));
         }
     }
 }

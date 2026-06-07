@@ -1,4 +1,10 @@
 ﻿{
   "item.kivo-shrine.name": "Kivotos Shrine",
-  "item.kivo-shrine.description": "A gift brought from Kivotos, just like the students."
+  "item.kivo-shrine.description": "A gift brought from Kivotos, just like the students.",
+
+  "mod.loaded": "KivoValley mod loaded!",
+  "teleport.festival-blocked": "Cannot teleport during a festival.",
+  "teleport.horse-blocked": "Cannot use teleport scroll while riding a horse!",
+  "teleport.fail": "Teleport failed: {{error}}",
+  "teleport.no-return-location": "No saved return location!"
 }

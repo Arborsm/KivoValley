@@ -89,7 +89,7 @@ public static class Teleport
                 var playerId = player.UniqueMultiplayerID;
                 if (!LastPositions.TryGetValue(playerId, out var lastPos))
                 {
-                    error = "没有保存的返回位置！";
+                    error = I18n.Teleport_NoReturnLocation();
                     return false;
                 }
 

@@ -1,4 +1,10 @@
 ﻿{
   "item.kivo-shrine.name": "什亭之匣",
-  "item.kivo-shrine.description": "和学生们一样，是从Kivotos一并而来的礼物"
+  "item.kivo-shrine.description": "和学生们一样，是从Kivotos一并而来的礼物",
+
+  "mod.loaded": "KivoValley模组已加载！",
+  "teleport.festival-blocked": "无法在节日期间传送",
+  "teleport.horse-blocked": "骑马时无法使用传送卷轴！",
+  "teleport.fail": "传送失败: {{error}}",
+  "teleport.no-return-location": "没有保存的返回位置！"
 }
